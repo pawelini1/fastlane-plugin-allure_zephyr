@@ -1,0 +1,13 @@
+lane :test do
+  allure_zephyr(
+    report_path: "./allure-report",
+    limit_by_project: "TEST",
+    project: "1234",
+    jira_api_url: "https://jira.example.com/rest/api/2",
+    zephyr_api_url: "https://jira.example.com/rest/zapi/latest",
+    jira_username: "user",
+    jira_password: "password",
+    version: "Unscheduled",
+    cycle: "Automation"
+  )
+end
