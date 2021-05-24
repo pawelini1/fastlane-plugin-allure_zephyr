@@ -7,11 +7,11 @@ require 'fastlane/plugin/allure_zephyr/version'
 Gem::Specification.new do |spec|
   spec.name          = 'fastlane-plugin-allure_zephyr'
   spec.version       = Fastlane::AllureZephyr::VERSION
-  spec.author        = 'nianenko'
-  spec.email         = 'nikita.ianenko@grandparade.co.uk'
+  spec.author        = 'Nikita Ianenko'
+  spec.email         = 'yanenko@hotmail.com'
 
   spec.summary       = 'Publish Allure results to Zephyr'
-  # spec.homepage      = "https://github.com/<GITHUB_USERNAME>/fastlane-plugin-allure_zephyr"
+  spec.homepage      = "https://github.com/sokecze/fastlane-plugin-allure_zephyr"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
