@@ -46,11 +46,16 @@ module Fastlane
         end
       end
 
-      def execute_all(version:, cycle:)
+      def execute_all(version:, cycle:, cloned_cycle_id:, build:, environment:, description:)
         statuses = Hash.new
 
         version_id = get_version_id(version_name: version)
-        cycle_id = get_cycle_id(cycle_name: cycle, version_id: version_id) || create_cycle(cycle_name: cycle, version_id: version_id)
+        cycle_id = get_cycle_id(cycle_name: cycle,  version_id: version_id)
+        if cycle_id.nil?
+          create_cycle(cycle_name: cycle, version_id: version_id, cloned_cycle_id: cloned_cycle_id, build: build, environment: environment, description: description)
+          cycle_id = get_cycle_id(cycle_name: cycle,  version_id: version_id)
+          UI.user_error!("Can't get '#{cycle}' cycle identifer after successful creation.") if cycle_id.nil?
+        end
 
         @tests.each do |ticket, value|
           execution = create_execution(
@@ -141,24 +146,30 @@ module Fastlane
         return nil
       end
 
-      def create_cycle(cycle_name:, version_id:)
+      def create_cycle(cycle_name:, version_id:, cloned_cycle_id:, build:, environment:, description:)
         UI.message("Creating cycle '#{cycle_name}'...")
         path = "#{@zephyr_api}/cycle"
       
-        today = Time.now.strftime("%e/%b/%y")
         body = {
+          clonedCycleId: cloned_cycle_id,
           name: cycle_name,
+          build: build,
+          environment: environment,
+          description: description,
           projectId: @project,
           versionId: version_id,
-          startDate: today,
-          endDate: today,
+          startDate: '',
+          endDate: '',
+          cloneCustomFields: false
         }
       
         response = HTTParty.post(path, { basic_auth: @credentials, headers: { "Content-Type": "application/json" }, body: body.to_json })
         UI.user_error!("Can't create cycle '#{cycle_name}'. Expected code 200, got #{response.code}") unless response.code == 200
         parsed = JSON.parse(response.body)
-      
-        return parsed["id"]
+        jobProgressToken = parsed['jobProgressToken']
+        if !jobProgressToken.nil?
+          wait_for_job_progress(token: jobProgressToken)
+        end
       end
       
       def get_ticket_id(ticket_number:)
@@ -169,6 +180,19 @@ module Fastlane
         parsed = JSON.parse(response.body)
       
         return parsed["id"]
+      end
+      
+      def wait_for_job_progress(token:)
+        start = Time.now
+        loop do
+          response = HTTParty.get("#{@zephyr_api}/execution/jobProgress/#{token}", { basic_auth: @credentials, headers: { "Content-Type": "application/json" }})
+          parsed = JSON.parse(response.body)
+          progress = parsed['progress']
+          break if progress == 1.0
+          timeWaiting = Time.now - start
+          UI.user_error!("Waiting for job with token #{token} timed out after #{timeWaiting} seconds.") if timeWaiting >= (ENV['ALLURE_ZEPHYR_PULLING_TIMEOUT'].to_f || 30.0)
+          sleep(ENV['ALLURE_ZEPHYR_PULLING_INTERVAL'].to_f || 2.0)
+        end
       end
     end
   end

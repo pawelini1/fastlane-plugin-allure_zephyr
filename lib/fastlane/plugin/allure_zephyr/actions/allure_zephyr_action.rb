@@ -15,7 +15,14 @@ module Fastlane
           report_path: report_path,
           limit_by_project: params[:limit_by_project]
         )
-        helper.execute_all(version: params[:version], cycle: params[:cycle])
+        helper.execute_all(
+          version: params[:version], 
+          cycle: params[:cycle], 
+          cloned_cycle_id: params[:cloned_cycle_id],
+          build: params[:build],
+          environment: params[:environment],
+          description: params[:description],
+        )
       end
 
       def self.description
@@ -83,6 +90,30 @@ module Fastlane
                                  is_string: true,
                                       type: String,
                              default_value: nil),
+          FastlaneCore::ConfigItem.new(key: :cloned_cycle_id,
+                               description: "Identifer of a cycle to clone. If not provided, empty cycle will be created",
+                                  optional: true,
+                                 is_string: true,
+                                      type: String,
+                             default_value: ""),
+          FastlaneCore::ConfigItem.new(key: :build,
+                               description: "Information about build used to run tests",
+                                  optional: true,
+                                 is_string: true,
+                                      type: String,
+                             default_value: ""),
+          FastlaneCore::ConfigItem.new(key: :environment,
+                               description: "Information about environment used to run tests",
+                                  optional: true,
+                                 is_string: true,
+                                      type: String,
+                             default_value: ""),
+          FastlaneCore::ConfigItem.new(key: :description,
+                               description: "Information about test execution",
+                                  optional: true,
+                                 is_string: true,
+                                      type: String,
+                             default_value: ""),
         ]
       end
 
